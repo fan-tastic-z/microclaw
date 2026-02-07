@@ -1,5 +1,7 @@
 # MicroClaw
 
+[English](README.md) | [中文](README_CN.md)
+
 > **Note:** This project is under active development. Features may change, and contributions are welcome!
 
 A Rust rewrite of [nanoclaw](https://github.com/gavrielc/nanoclaw/) -- an agentic AI assistant that lives in your Telegram chats. MicroClaw connects Claude to Telegram with full tool execution: run shell commands, read/write/edit files, search codebases, browse the web, schedule tasks, and maintain persistent memory across conversations.
@@ -39,6 +41,8 @@ For a deeper dive into the architecture, design decisions, and what it's like to
 - **Session resume** -- full conversation state (including tool interactions) persisted between messages; Claude remembers tool calls across invocations
 - **Context compaction** -- when sessions grow too large, older messages are automatically summarized to stay within context limits
 - **Sub-agent** -- delegate self-contained sub-tasks to a parallel agent with restricted tools
+- **Agent skills** -- extensible skill system ([Anthropic Skills](https://github.com/anthropics/skills) compatible); skills are auto-discovered from `data/skills/` and activated on demand
+- **Plan & execute** -- todo list tools for breaking down complex tasks, tracking progress step by step
 - **Web search** -- search the web via DuckDuckGo and fetch/parse web pages
 - **Scheduled tasks** -- cron-based recurring tasks and one-time scheduled tasks, managed through natural language
 - **Mid-conversation messaging** -- the agent can send intermediate messages before its final response
@@ -70,6 +74,9 @@ For a deeper dive into the architecture, design decisions, and what it's like to
 | `get_task_history` | View execution history for a scheduled task |
 | `export_chat` | Export chat history to markdown |
 | `sub_agent` | Delegate a sub-task to a parallel agent with restricted tools |
+| `activate_skill` | Activate an agent skill to load specialized instructions |
+| `todo_read` | Read the current task/plan list for a chat |
+| `todo_write` | Create or update the task/plan list for a chat |
 
 ## Memory
 
@@ -83,6 +90,46 @@ data/groups/
 ```
 
 Memory is loaded into Claude's system prompt on every request. Claude can read and update memory through tools -- tell it to "remember that I prefer Python" and it will persist across sessions.
+
+## Skills
+
+MicroClaw supports the [Anthropic Agent Skills](https://github.com/anthropics/skills) standard. Skills are modular packages that give the bot specialized capabilities for specific tasks.
+
+```
+data/skills/
+    pdf/
+        SKILL.md              # Required: name, description + instructions
+    docx/
+        SKILL.md
+```
+
+**How it works:**
+1. Skill metadata (name + description) is always included in the system prompt (~100 tokens per skill)
+2. When Claude determines a skill is relevant, it calls `activate_skill` to load the full instructions
+3. Claude follows the skill instructions to complete the task
+
+**Built-in skills:** pdf, docx, xlsx, pptx, skill-creator
+
+**Adding a skill:** Create a subdirectory under `data/skills/` with a `SKILL.md` file containing YAML frontmatter (`name` and `description`) and markdown instructions.
+
+**Commands:**
+- `/skills` -- list all available skills
+
+## Plan & Execute
+
+For complex, multi-step tasks, the bot can create a plan and track progress:
+
+```
+You: Set up a new Rust project with CI, tests, and documentation
+Bot: [creates a todo plan, then executes each step, updating progress]
+
+1. [x] Create project structure
+2. [x] Add CI configuration
+3. [~] Write unit tests
+4. [ ] Add documentation
+```
+
+Todo lists are stored at `data/groups/{chat_id}/TODO.json` and persist across sessions.
 
 ## Scheduling
 
@@ -232,9 +279,10 @@ src/
     claude.rs            # Anthropic Messages API client
     db.rs                # SQLite: messages, chats, scheduled_tasks, sessions
     memory.rs            # CLAUDE.md memory system
+    skills.rs            # Agent skills system (discovery, activation)
     scheduler.rs         # Background task scheduler (60s polling loop)
     tools/
-        mod.rs           # Tool trait + registry (17 tools)
+        mod.rs           # Tool trait + registry (22 tools)
         bash.rs          # Shell execution
         read_file.rs     # File reading
         write_file.rs    # File writing
@@ -247,6 +295,8 @@ src/
         send_message.rs  # Mid-conversation Telegram messaging
         schedule.rs      # 5 scheduling tools (create/list/pause/resume/cancel)
         sub_agent.rs     # Sub-agent with restricted tool registry
+        activate_skill.rs # Skill activation tool
+        todo.rs          # Plan & execute todo tools
 ```
 
 Key design decisions:
