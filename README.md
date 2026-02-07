@@ -172,6 +172,11 @@ This installer tries, in order:
 - Fallback to Homebrew on macOS
 - Fallback to `cargo install` from source
 
+Force GitHub Release only (no Homebrew/Cargo fallback):
+```sh
+curl -fsSL https://microclaw.ai/install.sh | MICROCLAW_INSTALL_METHOD=release bash
+```
+
 ### Homebrew (macOS)
 
 ```sh

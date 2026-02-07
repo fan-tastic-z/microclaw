@@ -171,6 +171,11 @@ curl -fsSL https://microclaw.ai/install.sh | bash
 - 在 macOS 上回退到 Homebrew 安装
 - 回退到 `cargo install` 源码编译安装
 
+强制只使用 GitHub Release（不回退 Homebrew/Cargo）：
+```sh
+curl -fsSL https://microclaw.ai/install.sh | MICROCLAW_INSTALL_METHOD=release bash
+```
+
 ### Homebrew (macOS)
 
 ```sh

@@ -27,6 +27,17 @@ require_cmd() {
   fi
 }
 
+detect_arch() {
+  case "$(uname -m)" in
+    x86_64|amd64) echo "x86_64" ;;
+    arm64|aarch64) echo "aarch64" ;;
+    *)
+      echo "Unsupported architecture: $(uname -m)" >&2
+      exit 1
+      ;;
+  esac
+}
+
 require_cmd cargo
 require_cmd git
 require_cmd gh
@@ -61,7 +72,8 @@ if [ ! -f "$BINARY" ]; then
 fi
 
 # --- Create tarball ---
-TARBALL_NAME="microclaw-$NEW_VERSION-$(uname -m)-apple-darwin.tar.gz"
+ARCH="$(detect_arch)"
+TARBALL_NAME="microclaw-$NEW_VERSION-${ARCH}-apple-darwin.tar.gz"
 TARBALL_PATH="target/release/$TARBALL_NAME"
 
 tar -czf "$TARBALL_PATH" -C target/release microclaw
