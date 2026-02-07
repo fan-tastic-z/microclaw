@@ -216,9 +216,33 @@ microclaw setup
 
 The wizard provides:
 - Interactive terminal UI (field navigation + inline help)
+- Provider/model pickers with visible lists (`Enter` to open list, `↑/↓` to select, `Enter` to confirm)
 - Local validation (required fields, timezone, data dir write test)
 - Online validation (Telegram `getMe`, LLM API reachability)
 - Safe `.env` save with automatic backup (`.env.bak.<timestamp>`)
+
+Provider presets available in the wizard:
+- `openai`
+- `openrouter`
+- `anthropic`
+- `google`
+- `alibaba`
+- `deepseek`
+- `moonshot`
+- `mistral`
+- `azure`
+- `bedrock`
+- `zhipu`
+- `minimax`
+- `cohere`
+- `baidu`
+- `tencent`
+- `huawei`
+- `xai`
+- `huggingface`
+- `together`
+- `perplexity`
+- `custom` (manual provider/model/base URL)
 
 You can still configure manually with `.env` if preferred:
 
@@ -251,7 +275,7 @@ All configuration is via environment variables (or `.env` file):
 | `BOT_USERNAME` | Yes | -- | Bot username (without @) |
 | `LLM_PROVIDER` | No | `anthropic` | Provider preset ID (or custom ID). `anthropic` uses native Anthropic API, others use OpenAI-compatible API |
 | `LLM_MODEL` | No | provider-specific | Model name (`CLAUDE_MODEL` fallback still supported) |
-| `LLM_BASE_URL` | No | provider default | Custom provider base URL (OpenRouter/DeepSeek/Groq/Ollama, etc.) |
+| `LLM_BASE_URL` | No | provider preset default | Custom provider base URL |
 | `DATA_DIR` | No | `./data` | Directory for SQLite DB and memory files |
 | `MAX_TOKENS` | No | `8192` | Max tokens per Claude response |
 | `MAX_TOOL_ITERATIONS` | No | `25` | Max tool-use loop iterations per message |

@@ -215,9 +215,33 @@ microclaw setup
 
 向导提供：
 - 终端交互式 UI（字段切换、状态提示、帮助）
+- provider/model 可视化列表选择（`Enter` 打开列表，`↑/↓` 选择，`Enter` 确认）
 - 本地校验（必填项、时区、数据目录可写）
 - 在线校验（Telegram `getMe`、LLM API 连通性）
 - 安全写入 `.env`（自动备份 `.env.bak.<timestamp>`）
+
+向导内置 provider 预设：
+- `openai`
+- `openrouter`
+- `anthropic`
+- `google`
+- `alibaba`
+- `deepseek`
+- `moonshot`
+- `mistral`
+- `azure`
+- `bedrock`
+- `zhipu`
+- `minimax`
+- `cohere`
+- `baidu`
+- `tencent`
+- `huawei`
+- `xai`
+- `huggingface`
+- `together`
+- `perplexity`
+- `custom`（手动填写 provider/model/base URL）
 
 如果你更喜欢手工配置，也可以直接写 `.env`：
 
@@ -248,7 +272,7 @@ microclaw start
 | `BOT_USERNAME` | 是 | -- | Bot 用户名（不带 @） |
 | `LLM_PROVIDER` | 否 | `anthropic` | 提供方预设 ID（或自定义 ID）。`anthropic` 走原生 Anthropic API，其他走 OpenAI 兼容 API |
 | `LLM_MODEL` | 否 | 随 provider 默认 | 模型名（仍兼容 `CLAUDE_MODEL`） |
-| `LLM_BASE_URL` | 否 | provider 默认 | 自定义 API 基础地址（OpenRouter/DeepSeek/Groq/Ollama 等） |
+| `LLM_BASE_URL` | 否 | provider 预设默认值 | 自定义 API 基础地址 |
 | `DATA_DIR` | 否 | `./data` | SQLite 和记忆文件目录 |
 | `MAX_TOKENS` | 否 | `8192` | 每次 Claude 回复的最大 token |
 | `MAX_TOOL_ITERATIONS` | 否 | `25` | 每条消息的最大工具循环次数 |
