@@ -42,4 +42,11 @@ fi
 
 echo "Starting deploy ($MODE)..."
 "$ROOT_DIR/scripts/release_homebrew.sh"
+
+
+
+git add .
+git commit -m "deployed"
+git push
+
 echo "Deploy complete."
