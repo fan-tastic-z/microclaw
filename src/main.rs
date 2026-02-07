@@ -30,6 +30,7 @@ USAGE:
 COMMANDS:
     start       Start the bot (Telegram + optional WhatsApp/Discord)
     setup       Run interactive setup wizard
+    version     Show version information
     help        Show this help message
 
 FEATURES:
@@ -99,11 +100,16 @@ MCP (optional):
 EXAMPLES:
     microclaw start          Start the bot
     microclaw setup          Run interactive setup wizard
+    microclaw --version      Show version
     microclaw help           Show this message
 
 ABOUT:
     https://microclaw.ai"#
     );
+}
+
+fn print_version() {
+    println!("microclaw {VERSION}");
 }
 
 #[tokio::main]
@@ -120,6 +126,10 @@ async fn main() -> anyhow::Result<()> {
             } else {
                 println!("Setup canceled");
             }
+            return Ok(());
+        }
+        Some("version" | "--version" | "-V") => {
+            print_version();
             return Ok(());
         }
         Some("help" | "--help" | "-h") | None => {
