@@ -160,6 +160,17 @@ Todo 列表存储在 `data/groups/{chat_id}/TODO.json`，跨会话持久化。
 
 ## 安装
 
+### 一键安装（推荐）
+
+```sh
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
+
+安装脚本会按顺序尝试：
+- 从最新 GitHub Release 下载匹配平台的预编译二进制
+- 在 macOS 上回退到 Homebrew 安装
+- 回退到 `cargo install` 源码编译安装
+
 ### Homebrew (macOS)
 
 ```sh

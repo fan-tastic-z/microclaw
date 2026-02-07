@@ -160,6 +160,17 @@ Manage tasks with natural language:
 
 ## Install
 
+### One-line installer (recommended)
+
+```sh
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
+
+This installer tries, in order:
+- Download matching prebuilt binary from the latest GitHub release
+- Fallback to Homebrew on macOS
+- Fallback to `cargo install` from source
+
 ### Homebrew (macOS)
 
 ```sh
