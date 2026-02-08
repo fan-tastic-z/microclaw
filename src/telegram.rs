@@ -460,6 +460,7 @@ pub(crate) async fn process_with_claude(
 
     // Compact if messages exceed threshold
     if messages.len() > state.config.max_session_messages {
+        archive_conversation(&state.config.data_dir, chat_id, &messages);
         messages = compact_messages(
             state.llm.as_ref(),
             &messages,
@@ -814,6 +815,35 @@ fn strip_images_for_session(messages: &mut [Message]) {
                 }
             }
         }
+    }
+}
+
+/// Archive the full conversation to a markdown file before compaction.
+/// Saved to `<data_dir>/groups/<chat_id>/conversations/<timestamp>.md`.
+fn archive_conversation(data_dir: &str, chat_id: i64, messages: &[Message]) {
+    let now = chrono::Utc::now().format("%Y%m%d-%H%M%S");
+    let dir = std::path::PathBuf::from(data_dir)
+        .join("groups")
+        .join(chat_id.to_string())
+        .join("conversations");
+
+    if let Err(e) = std::fs::create_dir_all(&dir) {
+        tracing::warn!("Failed to create conversations dir: {e}");
+        return;
+    }
+
+    let path = dir.join(format!("{now}.md"));
+    let mut content = String::new();
+    for msg in messages {
+        let role = &msg.role;
+        let text = message_to_text(msg);
+        content.push_str(&format!("## {role}\n\n{text}\n\n---\n\n"));
+    }
+
+    if let Err(e) = std::fs::write(&path, &content) {
+        tracing::warn!("Failed to archive conversation to {}: {e}", path.display());
+    } else {
+        info!("Archived conversation ({} messages) to {}", messages.len(), path.display());
     }
 }
 
