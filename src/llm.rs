@@ -164,9 +164,7 @@ impl LlmProvider for AnthropicProvider {
             if status.is_success() {
                 let body = response.text().await?;
                 let parsed: MessagesResponse = serde_json::from_str(&body).map_err(|e| {
-                    MicroClawError::LlmApi(format!(
-                        "Failed to parse response: {e}\nBody: {body}"
-                    ))
+                    MicroClawError::LlmApi(format!("Failed to parse response: {e}\nBody: {body}"))
                 })?;
                 return Ok(parsed);
             }
@@ -189,9 +187,7 @@ impl LlmProvider for AnthropicProvider {
                     api_err.error.error_type, api_err.error.message
                 )));
             }
-            return Err(MicroClawError::LlmApi(format!(
-                "HTTP {status}: {body}"
-            )));
+            return Err(MicroClawError::LlmApi(format!("HTTP {status}: {body}")));
         }
     }
 }
@@ -336,9 +332,7 @@ impl LlmProvider for OpenAiProvider {
             if let Ok(err) = serde_json::from_str::<OaiErrorResponse>(&text) {
                 return Err(MicroClawError::LlmApi(err.error.message));
             }
-            return Err(MicroClawError::LlmApi(format!(
-                "HTTP {status}: {text}"
-            )));
+            return Err(MicroClawError::LlmApi(format!("HTTP {status}: {text}")));
         }
     }
 }
