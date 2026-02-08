@@ -43,7 +43,7 @@ Telegram 消息
 
 ## 博客文章
 
-关于架构设计和使用体验的深入介绍：**[Building MicroClaw: An Agentic AI Assistant in Rust That Lives in Your Telegram Chats](BLOG.md)**
+关于项目架构与设计取舍的介绍文章：**[Building MicroClaw: An Agentic AI Assistant in Rust That Lives in Your Chats](https://microclaw.ai/blog/building-microclaw)**
 
 ## 功能特性
 

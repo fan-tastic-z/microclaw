@@ -44,7 +44,7 @@ Every message triggers an **agentic loop**: the model can call tools, inspect th
 
 ## Blog post
 
-For a deeper dive into the architecture, design decisions, and what it's like to use MicroClaw in practice, read the full write-up: **[Building MicroClaw: An Agentic AI Assistant in Rust That Lives in Your Telegram Chats](BLOG.md)**
+For a deeper dive into the architecture and design decisions, read: **[Building MicroClaw: An Agentic AI Assistant in Rust That Lives in Your Chats](https://microclaw.ai/blog/building-microclaw)**
 
 ## Features
 
@@ -448,7 +448,6 @@ Key design decisions:
 | File | Description |
 |------|-------------|
 | [README.md](README.md) | This file -- overview, setup, usage |
-| [BLOG.md](BLOG.md) | Deep dive blog post about the project |
 | [DEVELOP.md](DEVELOP.md) | Developer guide -- architecture, adding tools, debugging |
 | [TEST.md](TEST.md) | Manual testing guide for all features |
 | [CLAUDE.md](CLAUDE.md) | Project context for AI coding assistants |
