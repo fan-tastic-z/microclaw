@@ -27,6 +27,7 @@ import {
   Dialog,
   Flex,
   Heading,
+  Select,
   Switch,
   Text,
   TextField,
@@ -96,6 +97,7 @@ const PROVIDER_SUGGESTIONS = [
   'moonshot',
   'minimax',
   'azure_openai',
+  'custom',
 ]
 
 const MODEL_OPTIONS: Record<string, string[]> = {
@@ -809,6 +811,7 @@ function App() {
     setConfigDraft({
       llm_provider: data.config?.llm_provider || '',
       model: data.config?.model || defaultModelForProvider(String(data.config?.llm_provider || 'anthropic')),
+      llm_base_url: String(data.config?.llm_base_url || ''),
       api_key: '',
       max_tokens: Number(data.config?.max_tokens ?? 8192),
       max_tool_iterations: Number(data.config?.max_tool_iterations ?? 100),
@@ -835,6 +838,9 @@ function App() {
           break
         case 'model':
           next.model = defaultModelForProvider(String(next.llm_provider || DEFAULT_CONFIG_VALUES.llm_provider))
+          break
+        case 'llm_base_url':
+          next.llm_base_url = ''
           break
         case 'max_tokens':
           next.max_tokens = DEFAULT_CONFIG_VALUES.max_tokens
@@ -878,6 +884,9 @@ function App() {
         web_enabled: Boolean(configDraft.web_enabled),
         web_host: String(configDraft.web_host || '127.0.0.1'),
         web_port: Number(configDraft.web_port || 10961),
+      }
+      if (String(configDraft.llm_provider || '').trim().toLowerCase() === 'custom') {
+        payload.llm_base_url = String(configDraft.llm_base_url || '').trim() || null
       }
       const apiKey = String(configDraft.api_key || '').trim()
       if (apiKey) payload.api_key = apiKey
@@ -934,6 +943,23 @@ function App() {
 
   const runtimeKey = `${sessionKey}-${runtimeNonce}`
   const radixAccent = RADIX_ACCENT_BY_THEME[uiTheme] ?? 'green'
+  const currentProvider = String(configDraft.llm_provider || DEFAULT_CONFIG_VALUES.llm_provider).trim().toLowerCase()
+  const providerOptions = Array.from(
+    new Set([currentProvider, ...PROVIDER_SUGGESTIONS.map((p) => p.toLowerCase())].filter(Boolean)),
+  )
+  const modelOptions = MODEL_OPTIONS[currentProvider] || []
+  const sectionCardClass = appearance === 'dark'
+    ? 'rounded-xl border p-5'
+    : 'rounded-xl border border-slate-200/80 p-5'
+  const sectionCardStyle = appearance === 'dark'
+    ? { borderColor: 'color-mix(in srgb, var(--mc-border-soft) 68%, transparent)' }
+    : undefined
+  const toggleCardClass = appearance === 'dark'
+    ? 'rounded-lg border p-3'
+    : 'rounded-lg border border-slate-200/80 p-3'
+  const toggleCardStyle = appearance === 'dark'
+    ? { borderColor: 'color-mix(in srgb, var(--mc-border-soft) 60%, transparent)' }
+    : undefined
 
   return (
     <Theme appearance={appearance} accentColor={radixAccent as never} grayColor="slate" radius="medium" scaling="100%">
@@ -1014,28 +1040,30 @@ function App() {
               Save writes to microclaw.config.yaml. Restart is required.
             </Dialog.Description>
             {config ? (
-              <Flex direction="column" gap="3">
-                <div className="rounded-xl border border-slate-200/80 p-4">
+              <Flex direction="column" gap="4">
+                <div className={sectionCardClass} style={sectionCardStyle}>
                   <Text size="3" weight="bold">
                     LLM
                   </Text>
-                  <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div className="mt-3 grid grid-cols-1 gap-3">
                     <div>
                       <Flex justify="between" align="center" mb="1">
                         <Text size="1" color="gray">Provider</Text>
                         <Button size="1" variant="ghost" onClick={() => resetConfigField('llm_provider')}>Reset</Button>
                       </Flex>
-                      <TextField.Root
-                        list="provider-suggestions"
+                      <Select.Root
                         value={String(configDraft.llm_provider || DEFAULT_CONFIG_VALUES.llm_provider)}
-                        onChange={(e) => setConfigField('llm_provider', e.target.value)}
-                        placeholder="anthropic"
-                      />
-                      <datalist id="provider-suggestions">
-                        {PROVIDER_SUGGESTIONS.map((provider) => (
-                          <option key={provider} value={provider} />
-                        ))}
-                      </datalist>
+                        onValueChange={(value) => setConfigField('llm_provider', value)}
+                      >
+                        <Select.Trigger placeholder="Select provider" />
+                        <Select.Content>
+                          {providerOptions.map((provider) => (
+                            <Select.Item key={provider} value={provider}>
+                              {provider}
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Root>
                     </div>
 
                     <div>
@@ -1044,32 +1072,44 @@ function App() {
                         <Button size="1" variant="ghost" onClick={() => resetConfigField('model')}>Reset</Button>
                       </Flex>
                       <TextField.Root
-                        list="model-suggestions"
-                        value={String(configDraft.model || defaultModelForProvider(String(configDraft.llm_provider || 'anthropic')))}
+                        value={String(configDraft.model || defaultModelForProvider(String(configDraft.llm_provider || DEFAULT_CONFIG_VALUES.llm_provider)))}
                         onChange={(e) => setConfigField('model', e.target.value)}
                         placeholder="claude-sonnet-4-5-20250929"
                       />
-                      <datalist id="model-suggestions">
-                        {(() => {
-                          const provider = String(configDraft.llm_provider || DEFAULT_CONFIG_VALUES.llm_provider).toLowerCase()
-                          const options = MODEL_OPTIONS[provider] || []
-                          return options.map((model) => <option key={model} value={model} />)
-                        })()}
-                      </datalist>
+                      {modelOptions.length > 0 ? (
+                        <Text size="1" color="gray" className="mt-1 block">
+                          Suggested: {modelOptions.join(' / ')}
+                        </Text>
+                      ) : null}
                     </div>
-                  </div>
-                  <div className="mt-3">
-                    <Text size="1" color="gray">API key (leave blank to keep existing)</Text>
-                    <TextField.Root
-                      className="mt-2"
-                      value={String(configDraft.api_key || '')}
-                      onChange={(e) => setConfigField('api_key', e.target.value)}
-                      placeholder="api_key"
-                    />
+
+                    {currentProvider === 'custom' ? (
+                      <div>
+                        <Flex justify="between" align="center" mb="1">
+                          <Text size="1" color="gray">API Host</Text>
+                          <Button size="1" variant="ghost" onClick={() => resetConfigField('llm_base_url')}>Reset</Button>
+                        </Flex>
+                        <TextField.Root
+                          value={String(configDraft.llm_base_url || '')}
+                          onChange={(e) => setConfigField('llm_base_url', e.target.value)}
+                          placeholder="https://your-provider.example/v1"
+                        />
+                      </div>
+                    ) : null}
+
+                    <div>
+                      <Text size="1" color="gray">API key (leave blank to keep existing)</Text>
+                      <TextField.Root
+                        className="mt-2"
+                        value={String(configDraft.api_key || '')}
+                        onChange={(e) => setConfigField('api_key', e.target.value)}
+                        placeholder="api_key"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-200/80 p-4">
+                <div className={sectionCardClass} style={sectionCardStyle}>
                   <Text size="3" weight="bold">
                     Runtime
                   </Text>
@@ -1110,7 +1150,7 @@ function App() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-200/80 p-4">
+                <div className={sectionCardClass} style={sectionCardStyle}>
                   <Text size="3" weight="bold">
                     Web
                   </Text>
@@ -1139,7 +1179,7 @@ function App() {
                     </div>
                   </div>
                   <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div className="rounded-lg border border-slate-200/80 p-3">
+                    <div className={toggleCardClass} style={toggleCardStyle}>
                       <Flex justify="between" align="center">
                         <Text size="2">show_thinking</Text>
                         <Switch
@@ -1151,7 +1191,7 @@ function App() {
                         Reset to default
                       </Button>
                     </div>
-                    <div className="rounded-lg border border-slate-200/80 p-3">
+                    <div className={toggleCardClass} style={toggleCardStyle}>
                       <Flex justify="between" align="center">
                         <Text size="2">web_enabled</Text>
                         <Switch
@@ -1171,7 +1211,7 @@ function App() {
                     {saveStatus}
                   </Text>
                 ) : null}
-                <Flex justify="end" gap="2" mt="2">
+                <Flex justify="end" gap="2" mt="1">
                   <Dialog.Close>
                     <Button variant="soft">Close</Button>
                   </Dialog.Close>
