@@ -116,8 +116,8 @@ struct McpHttpInner {
 }
 
 enum McpTransport {
-    Stdio(Mutex<McpStdioInner>),
-    StreamableHttp(Mutex<McpHttpInner>),
+    Stdio(Box<Mutex<McpStdioInner>>),
+    StreamableHttp(Box<Mutex<McpHttpInner>>),
 }
 
 pub struct McpServer {
@@ -189,7 +189,7 @@ impl McpServer {
                     env: config.env.clone(),
                 };
                 let inner = spawn_stdio_inner(&spec, name)?;
-                (McpTransport::Stdio(Mutex::new(inner)), Some(spec))
+                (McpTransport::Stdio(Box::new(Mutex::new(inner))), Some(spec))
             }
             "streamable_http" | "http" => {
                 if config.endpoint.trim().is_empty() {
@@ -204,12 +204,12 @@ impl McpServer {
                     .map_err(|e| format!("Failed to build HTTP client for MCP '{name}': {e}"))?;
 
                 (
-                    McpTransport::StreamableHttp(Mutex::new(McpHttpInner {
+                    McpTransport::StreamableHttp(Box::new(Mutex::new(McpHttpInner {
                         client,
                         endpoint: config.endpoint.clone(),
                         headers: config.headers.clone(),
                         next_id: 1,
-                    })),
+                    }))),
                     None,
                 )
             }
