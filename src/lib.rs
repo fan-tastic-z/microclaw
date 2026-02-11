@@ -5,6 +5,7 @@ pub mod claude;
 pub mod config;
 pub mod config_wizard;
 pub mod db;
+pub mod doctor;
 pub mod error;
 pub mod gateway;
 pub mod llm;

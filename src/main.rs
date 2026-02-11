@@ -1,7 +1,8 @@
 use microclaw::config::Config;
 use microclaw::error::MicroClawError;
 use microclaw::{
-    builtin_skills, config_wizard, db, gateway, logging, mcp, memory, setup, skills, telegram,
+    builtin_skills, config_wizard, db, doctor, gateway, logging, mcp, memory, setup, skills,
+    telegram,
 };
 use std::path::Path;
 use tracing::info;
@@ -19,6 +20,7 @@ COMMANDS:
     start       Start the bot (Telegram + optional WhatsApp/Discord)
     gateway     Manage gateway service (install/uninstall/start/stop/status/logs)
     config      Run interactive Q&A config flow (recommended)
+    doctor      Run preflight diagnostics (cross-platform)
     setup       Run interactive setup wizard
     version     Show version information
     help        Show this help message
@@ -96,6 +98,8 @@ EXAMPLES:
     microclaw gateway status      Show gateway service status
     microclaw gateway logs 100    Show last 100 lines of gateway logs
     microclaw config              Run interactive Q&A config flow
+    microclaw doctor              Run preflight diagnostics
+    microclaw doctor --json       Output diagnostics as JSON
     microclaw setup               Run full-screen setup wizard
     microclaw version             Show version
     microclaw help                Show this message
@@ -201,6 +205,10 @@ async fn main() -> anyhow::Result<()> {
             } else {
                 println!("Config canceled");
             }
+            return Ok(());
+        }
+        Some("doctor") => {
+            doctor::run_cli(&args[2..])?;
             return Ok(());
         }
         Some("version" | "--version" | "-V") => {

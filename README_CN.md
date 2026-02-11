@@ -183,6 +183,36 @@ iwr https://microclaw.ai/install.ps1 -UseBasicParsing | iex
 - 从最新 GitHub Release 下载匹配平台的预编译二进制
 - 不在 `install.sh` 内回退到 Homebrew/Cargo（请使用下面的独立方式）
 
+### 预检诊断（doctor）
+
+在首次启动或排障时，先运行跨平台诊断：
+
+```sh
+microclaw doctor
+```
+
+如果要提交支持工单，建议附加机器可读输出：
+
+```sh
+microclaw doctor --json
+```
+
+会检查：PATH、shell 运行时、Node/npm、`agent-browser`、Windows PowerShell 执行策略、以及 `microclaw.data/mcp.json` 里的 MCP 命令依赖。
+
+### 卸载（脚本）
+
+macOS/Linux：
+
+```sh
+curl -fsSL https://microclaw.ai/uninstall.sh | bash
+```
+
+Windows PowerShell：
+
+```powershell
+iwr https://microclaw.ai/uninstall.ps1 -UseBasicParsing | iex
+```
+
 ### Homebrew (macOS)
 
 ```sh

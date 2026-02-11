@@ -240,6 +240,36 @@ This installer only does one thing:
 - Download and install the matching prebuilt binary from the latest GitHub release
 - It does not fallback to Homebrew/Cargo inside `install.sh` (use separate methods below)
 
+### Preflight diagnostics
+
+Run cross-platform diagnostics before first start (or when troubleshooting):
+
+```sh
+microclaw doctor
+```
+
+Machine-readable output for support tickets:
+
+```sh
+microclaw doctor --json
+```
+
+Checks include PATH, shell runtime, Node/npm, `agent-browser`, PowerShell policy (Windows), and MCP command dependencies from `microclaw.data/mcp.json`.
+
+### Uninstall (script)
+
+macOS/Linux:
+
+```sh
+curl -fsSL https://microclaw.ai/uninstall.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+iwr https://microclaw.ai/uninstall.ps1 -UseBasicParsing | iex
+```
+
 ### Homebrew (macOS)
 
 ```sh

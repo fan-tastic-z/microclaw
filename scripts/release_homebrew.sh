@@ -7,10 +7,10 @@ set -euo pipefail
 # 1. Bump patch version in Cargo.toml
 # 2. Build web/dist
 # 3. cargo build --release
-# 3. Create a tar.gz of the binary
-# 4. Create a GitHub release and upload the tarball
-# 5. Update the homebrew-tap Formula with new version + sha256
-# 6. Push tap changes
+# 4. Create a tar.gz of the binary
+# 5. Create a GitHub release and upload the tarball
+# 6. Update the homebrew-tap Formula with new version + sha256
+# 7. Push tap changes
 # -------------------------------------------------------------------
 
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
@@ -37,6 +37,48 @@ detect_arch() {
       exit 1
       ;;
   esac
+}
+
+latest_release_tag() {
+  git tag --list 'v*' --sort=-version:refname | head -n1
+}
+
+build_release_notes() {
+  local prev_tag="$1"
+  local new_tag="$2"
+  local out_file="$3"
+  local compare_url="https://github.com/$GITHUB_REPO/compare"
+  local changes
+
+  if [ -n "$prev_tag" ]; then
+    changes="$(git log --no-merges --pretty=format:'%s' "$prev_tag..HEAD" \
+      | grep -vE '^bump version to ' \
+      | head -n 30 || true)"
+  else
+    changes="$(git log --no-merges --pretty=format:'%s' \
+      | grep -vE '^bump version to ' \
+      | head -n 30 || true)"
+  fi
+
+  {
+    echo "MicroClaw $new_tag"
+    echo
+    echo "## 主要改动"
+    if [ -n "$changes" ]; then
+      while IFS= read -r line; do
+        [ -n "$line" ] && echo "- $line"
+      done <<< "$changes"
+    else
+      echo "- Internal maintenance and release packaging updates"
+    fi
+    echo
+    echo "## Compare"
+    if [ -n "$prev_tag" ]; then
+      echo "$compare_url/$prev_tag...$new_tag"
+    else
+      echo "N/A (first tagged release)"
+    fi
+  } > "$out_file"
 }
 
 require_cmd cargo
@@ -77,14 +119,24 @@ if [ -f "web/package.json" ]; then
 fi
 
 # --- Bump patch version in Cargo.toml ---
+PREV_TAG="$(latest_release_tag)"
 CURRENT_VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
 IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
 NEW_PATCH=$((PATCH + 1))
 NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
 TAG="v$NEW_VERSION"
 
+if [ "$PREV_TAG" = "$TAG" ]; then
+  PREV_TAG="$(git tag --list 'v*' --sort=-version:refname | sed -n '2p')"
+fi
+
 sed -i '' "s/^version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" Cargo.toml
 echo "Version bumped: $CURRENT_VERSION -> $NEW_VERSION"
+if [ -n "$PREV_TAG" ]; then
+  echo "Previous tag: $PREV_TAG"
+else
+  echo "Previous tag: (none)"
+fi
 
 # --- Build release binary ---
 echo "Building release binary..."
@@ -115,13 +167,16 @@ git push
 git push --tags
 
 # --- GitHub release ---
+RELEASE_NOTES_FILE="target/release/release-notes-$TAG.md"
+build_release_notes "$PREV_TAG" "$TAG" "$RELEASE_NOTES_FILE"
+
 if gh release view "$TAG" --repo "$GITHUB_REPO" >/dev/null 2>&1; then
   echo "Release $TAG already exists. Skipping create."
 else
   gh release create "$TAG" "$TARBALL_PATH" \
     --repo "$GITHUB_REPO" \
     -t "$TAG" \
-    -n "MicroClaw $TAG"
+    -F "$RELEASE_NOTES_FILE"
   echo "Created GitHub release: $TAG"
 fi
 
